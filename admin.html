@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Portal | CityToursLanka Operations</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen">
+
+  <!-- LOGIN OVERLAY -->
+  <div id="loginOverlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl max-w-sm w-full mx-4">
+      <div class="text-center mb-6">
+        <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-3 text-xl font-black">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h2 class="text-xl font-extrabold text-slate-900">Admin Control Portal</h2>
+        <p class="text-xs text-slate-400 mt-1">CityToursLanka Operations</p>
+      </div>
+      <form onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">Admin Email</label>
+          <input type="email" id="admEmail" value="admin@ceylontrails.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-500 mb-1">Password</label>
+          <input type="password" id="admPass" value="AdminPass@123" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs font-semibold outline-none focus:border-emerald-500">
+        </div>
+        <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl transition text-xs uppercase tracking-wider shadow-md">
+          Authenticate Login
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- DASHBOARD LAYOUT -->
+  <div id="dashboard" class="hidden flex flex-col md:flex-row min-h-screen">
+    
+    <!-- Sidebar -->
+    <aside class="w-full md:w-64 bg-slate-900 text-slate-300 p-6 flex flex-col justify-between shrink-0 shadow-xl">
+      <div>
+        <div class="flex items-center gap-3 mb-10 px-2">
+          <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold">
+            <i class="fa-solid fa-compass"></i>
+          </div>
+          <div>
+            <div class="font-extrabold text-white text-base leading-tight">CityToursLanka</div>
+            <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">CMS Console</span>
+          </div>
+        </div>
+
+        <nav class="space-y-1.5 text-xs font-bold">
+          <button onclick="switchTab('tabPackages')" id="btnPackages" class="nav-btn active w-full flex items-center justify-between px-4 py-3 rounded-xl bg-emerald-600 text-white transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-route text-sm"></i> Tour Packages</div>
+            <span id="badgePackages" class="bg-white text-emerald-700 text-[10px] px-2 py-0.5 rounded-full font-extrabold">0</span>
+          </button>
+          <button onclick="switchTab('tabProducts')" id="btnProducts" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-boxes-stacked text-sm"></i> Store Inventory</div>
+            <span id="badgeProducts" class="bg-slate-800 text-slate-300 text-[10px] px-2 py-0.5 rounded-full font-extrabold">0</span>
+          </button>
+          <button onclick="switchTab('tabOrders')" id="btnOrders" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-cart-shopping text-sm"></i> Souvenir Orders</div>
+            <span id="badgeOrders" class="bg-amber-500 text-slate-900 text-[10px] px-2 py-0.5 rounded-full font-extrabold">0</span>
+          </button>
+          <button onclick="switchTab('tabBookings')" id="btnBookings" class="nav-btn w-full flex items-center justify-between px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <div class="flex items-center gap-3"><i class="fa-solid fa-calendar-check text-sm"></i> Tour Bookings</div>
+            <span id="badgeBookings" class="bg-emerald-500 text-white text-[10px] px-2 py-0.5 rounded-full font-extrabold">0</span>
+          </button>
+          <button onclick="switchTab('tabSettings')" id="btnSettings" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-slate-800 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-sliders text-sm"></i> Site Settings (CMS)
+          </button>
+        </nav>
+      </div>
+
+      <div class="pt-6 border-t border-slate-800 mt-6">
+        <button onclick="handleLogout()" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 font-bold text-xs transition">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-6 md:p-8 bg-slate-50 min-h-screen overflow-y-auto">
+      
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 mb-8 border-b border-slate-200 gap-4">
+        <div>
+          <h1 class="text-2xl font-black text-slate-900">Control Center</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Manage tour packages, itineraries, store goods, and client reservations</p>
+        </div>
+        <div class="flex gap-3">
+          <button onclick="fetchAllData()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition shadow-sm flex items-center gap-2">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+          <button onclick="openPackageModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Add Tour Package
+          </button>
+          <button onclick="openProductModal()" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+            <i class="fa-solid fa-plus"></i> Add Souvenir Item
+          </button>
+        </div>
+      </div>
+
+      <!-- 1. TAB: TOUR PACKAGES (WITH FULL EDIT & ITINERARY BUILDER) -->
+      <div id="tabPackages" class="space-y-6 pb-12">
+        <div id="adminPackagesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
+      </div>
+
+      <!-- 2. TAB: STORE PRODUCTS -->
+      <div id="tabProducts" class="hidden space-y-6 pb-12">
+        <div id="adminProductsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"></div>
+      </div>
+
+      <!-- 3. TAB: SOUVENIR ORDERS -->
+      <div id="tabOrders" class="hidden space-y-6 pb-12">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-400 uppercase font-extrabold border-b border-slate-200">
+              <tr>
+                <th class="p-4">Customer</th>
+                <th class="p-4">Delivery Address</th>
+                <th class="p-4">Items</th>
+                <th class="p-4">Total</th>
+                <th class="p-4">Status</th>
+                <th class="p-4 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 4. TAB: TOUR BOOKINGS -->
+      <div id="tabBookings" class="hidden space-y-6 pb-12">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-50 text-slate-400 uppercase font-extrabold border-b border-slate-200">
+              <tr>
+                <th class="p-4">Customer</th>
+                <th class="p-4">Package</th>
+                <th class="p-4">Date</th>
+                <th class="p-4">Guests</th>
+                <th class="p-4">Amount</th>
+                <th class="p-4">Status</th>
+                <th class="p-4 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="bookingsTableBody" class="divide-y divide-slate-100 font-medium"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. TAB: SITE SETTINGS (CMS) -->
+      <div id="tabSettings" class="hidden space-y-6 max-w-3xl pb-12">
+        <div class="bg-white p-8 rounded-3xl border border-slate-200 shadow-sm">
+          <h3 class="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
+            <i class="fa-solid fa-globe text-emerald-600"></i> Global Website Content (CMS)
+          </h3>
+          <form onsubmit="saveSettings(event)" class="space-y-4 text-xs font-semibold">
+            <div>
+              <label class="block text-slate-500 mb-1">Brand Name</label>
+              <input type="text" id="setSiteName" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Hero Section Main Title</label>
+              <input type="text" id="setHeroTitle" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Hero Subtitle Text</label>
+              <textarea id="setHeroSubtitle" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none"></textarea>
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Hero Background Image URL</label>
+              <input type="url" id="setHeroImage" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-500 mb-1">Contact Phone Number</label>
+                <input type="text" id="setPhone" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none">
+              </div>
+              <div>
+                <label class="block text-slate-500 mb-1">Contact Email Address</label>
+                <input type="email" id="setEmail" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">WhatsApp Chat Number</label>
+              <input type="text" id="setWhatsapp" placeholder="94771234567" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none">
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-xl uppercase tracking-wider shadow mt-4 transition">
+              Update Live Website
+            </button>
+          </form>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- COMPREHENSIVE TOUR PACKAGE ADD / EDIT MODAL -->
+  <div id="packageModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-2xl w-full rounded-3xl p-6 sm:p-8 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b">
+        <h3 id="pkgModalHeading" class="text-lg font-bold text-slate-900">Edit Tour Package Details</h3>
+        <button onclick="closePackageModal()" class="text-slate-400 hover:text-slate-700 p-1"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <form onsubmit="handlePackageSubmit(event)" class="space-y-4 text-xs font-semibold">
+        <input type="hidden" id="pkgEditId">
+        
+        <div>
+          <label class="block text-slate-500 mb-1">Tour Package Title</label>
+          <input type="text" id="inpPkgTitle" required placeholder="e.g. Cultural Triangle Heritage" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none font-bold">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block text-slate-500 mb-1">Category</label>
+            <select id="inpPkgCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none cursor-pointer">
+              <option value="Cultural">Cultural & Heritage</option>
+              <option value="Adventure">Highlands & Rails</option>
+              <option value="Beach">Beach & Coastal</option>
+              <option value="Wildlife">Wildlife Safari</option>
+              <option value="Honeymoon">Honeymoon & Luxury</option>
+              <option value="Family">Family Vacation</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-1">Duration</label>
+            <input type="text" id="inpPkgDuration" placeholder="e.g. 3 Days / 2 Nights" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-1">Price per Guest (USD)</label>
+            <input type="number" id="inpPkgPrice" required placeholder="260" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none font-bold text-emerald-700">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-slate-500 mb-1">Banner Image URL</label>
+          <input type="url" id="inpPkgImage" required placeholder="https://images.unsplash.com/..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none">
+        </div>
+
+        <div>
+          <label class="block text-slate-500 mb-1">Overview Description</label>
+          <textarea id="inpPkgDesc" rows="2" required placeholder="General description of the tour..." class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"></textarea>
+        </div>
+
+        <!-- Inclusions Input (Comma-separated) -->
+        <div>
+          <label class="block text-slate-500 mb-1">Package Inclusions (Separate with commas)</label>
+          <input type="text" id="inpPkgIncludes" placeholder="Private A/C Transport, English Chauffeur, Site Tickets, Hotel Breakfast" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none">
+          <span class="text-[10px] text-slate-400 mt-1 block">Items will be displayed with checkmarks on the tour details page.</span>
+        </div>
+
+        <!-- Dynamic Day-by-Day Itinerary Builder -->
+        <div class="border-t border-slate-200 pt-4">
+          <div class="flex justify-between items-center mb-3">
+            <div>
+              <span class="block text-slate-700 font-bold uppercase text-[11px]">Day-by-Day Timeline Itinerary</span>
+              <span class="text-[10px] text-slate-400">Add, edit, or remove itinerary days for this package.</span>
+            </div>
+            <button type="button" onclick="addItineraryDayRow()" class="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold px-3 py-1.5 rounded-xl text-xs flex items-center gap-1 transition">
+              <i class="fa-solid fa-plus"></i> Add Day
+            </button>
+          </div>
+
+          <div id="itineraryContainer" class="space-y-3 max-h-60 overflow-y-auto p-1"></div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-4 border-t">
+          <button type="button" onclick="closePackageModal()" class="bg-slate-100 hover:bg-slate-200 px-5 py-2.5 rounded-xl text-slate-600 font-bold">Cancel</button>
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl font-bold shadow">Save Tour Package</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SOUVENIR PRODUCT ADD / EDIT MODAL -->
+  <div id="productModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-3xl p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <h3 id="prodModalHeading" class="text-base font-bold text-slate-900 mb-4">Add Souvenir Item</h3>
+      <form onsubmit="handleProductSubmit(event)" class="space-y-3.5 text-xs font-semibold">
+        <input type="hidden" id="prodEditId">
+        <div>
+          <label class="block text-slate-500 mb-1">Product Title</label>
+          <input type="text" id="inpProdTitle" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none font-bold">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-500 mb-1">Category</label>
+            <select id="inpProdCategory" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+              <option value="Tea">Ceylon Tea</option>
+              <option value="Spices">Spices</option>
+              <option value="Handicrafts">Handicrafts</option>
+              <option value="Batik">Batik</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-500 mb-1">Price (USD)</label>
+            <input type="number" id="inpProdPrice" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none font-bold">
+          </div>
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Weight</label>
+          <input type="text" id="inpProdWeight" placeholder="e.g. 500g Tin Caddy" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Image URL</label>
+          <input type="url" id="inpProdImage" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none">
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Description</label>
+          <textarea id="inpProdDesc" rows="2" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-2.5 outline-none"></textarea>
+        </div>
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeProductModal()" class="bg-slate-100 px-4 py-2 rounded-xl text-slate-600">Cancel</button>
+          <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-xl font-bold shadow">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SCRIPT -->
+  <script>
+    const API = 'http://localhost:5000/api';
+    let packagesData = [];
+    let productsData = [];
+    let bookingsData = [];
+    let ordersData = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('adminToken')) showDashboard();
+    });
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      try {
+        const res = await fetch(`${API}/admin/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: admEmail.value, password: admPass.value })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('adminToken', data.token);
+          showDashboard();
+        } else {
+          Swal.fire({ icon: 'error', title: 'Login Failed', text: data.message });
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Backend is offline.' });
+      }
+    }
+
+    function showDashboard() {
+      document.getElementById('loginOverlay').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      fetchAllData();
+    }
+
+    function handleLogout() {
+      localStorage.removeItem('adminToken');
+      location.reload();
+    }
+
+    async function fetchAllData() {
+      const token = localStorage.getItem('adminToken');
+      const headers = { 'Authorization': `Bearer ${token}` };
+
+      try {
+        const [setRes, pkgRes, prodRes, bkgRes, ordRes] = await Promise.all([
+          fetch(`${API}/settings`),
+          fetch(`${API}/packages`),
+          fetch(`${API}/products`),
+          fetch(`${API}/admin/bookings`, { headers }),
+          fetch(`${API}/admin/orders`, { headers })
+        ]);
+
+        if (ordRes.status === 401) {
+          handleLogout();
+          return;
+        }
+
+        const settings = (await setRes.json()).data;
+        if (settings) {
+          document.getElementById('setSiteName').value = settings.siteName || '';
+          document.getElementById('setHeroTitle').value = settings.heroTitle || '';
+          document.getElementById('setHeroSubtitle').value = settings.heroSubtitle || '';
+          document.getElementById('setHeroImage').value = settings.heroImage || '';
+          document.getElementById('setPhone').value = settings.phone || '';
+          document.getElementById('setEmail').value = settings.email || '';
+          document.getElementById('setWhatsapp').value = settings.whatsapp || '';
+        }
+
+        packagesData = (await pkgRes.json()).data || [];
+        productsData = (await prodRes.json()).data || [];
+        bookingsData = (await bkgRes.json()).data || [];
+        ordersData = (await ordRes.json()).data || [];
+
+        document.getElementById('badgePackages').innerText = packagesData.length;
+        document.getElementById('badgeProducts').innerText = productsData.length;
+        document.getElementById('badgeOrders').innerText = ordersData.length;
+        document.getElementById('badgeBookings').innerText = bookingsData.length;
+
+        renderPackages();
+        renderProducts();
+        renderOrders();
+        renderBookings();
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    function switchTab(tabId) {
+      ['tabPackages', 'tabProducts', 'tabOrders', 'tabBookings', 'tabSettings'].forEach(t => {
+        document.getElementById(t).classList.toggle('hidden', t !== tabId);
+      });
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-emerald-600', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+      const active = document.getElementById(tabId.replace('tab', 'btn'));
+      if (active) {
+        active.classList.remove('text-slate-400');
+        active.classList.add('bg-emerald-600', 'text-white');
+      }
+    }
+
+    // --- PACKAGES & DYNAMIC ITINERARY BUILDER ---
+    function renderPackages() {
+      const grid = document.getElementById('adminPackagesGrid');
+      grid.innerHTML = '';
+      packagesData.forEach(p => {
+        grid.innerHTML += `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between shadow-sm hover:shadow-md transition">
+            <div>
+              <img src="${p.image}" class="h-40 w-full object-cover rounded-xl mb-3">
+              <span class="text-[10px] font-bold text-emerald-600 uppercase">${p.category}</span>
+              <h4 class="font-bold text-slate-900 text-sm line-clamp-1">${p.title}</h4>
+              <p class="text-xs text-slate-400 mt-0.5">${p.duration} • ${(p.itinerary || []).length} Days planned</p>
+            </div>
+            <div class="mt-4 pt-3 border-t flex justify-between items-center">
+              <span class="font-black text-slate-900">$${p.priceUSD}</span>
+              <div class="flex gap-1.5">
+                <button onclick="editPackage('${p._id}')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1">
+                  <i class="fa-solid fa-pen"></i> Edit Full Details
+                </button>
+                <button onclick="deletePackage('${p._id}')" class="bg-red-50 hover:bg-red-100 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold transition">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function addItineraryDayRow(day = '', title = '', desc = '') {
+      const container = document.getElementById('itineraryContainer');
+      const rowId = 'itRow_' + Math.random().toString(36).substr(2, 9);
+      const rowCount = container.children.length + 1;
+      const defaultDay = day || `Day ${rowCount}`;
+
+      const row = document.createElement('div');
+      row.id = rowId;
+      row.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 relative';
+      row.innerHTML = `
+        <div class="flex items-center gap-2">
+          <input type="text" value="${defaultDay}" placeholder="Day 1" class="it-day w-24 bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold outline-none">
+          <input type="text" value="${title}" placeholder="Destination / Activity Title" class="it-title flex-1 bg-white border border-slate-200 rounded-lg p-1.5 text-xs font-bold outline-none">
+          <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-700 p-1"><i class="fa-solid fa-trash"></i></button>
+        </div>
+        <textarea placeholder="Day activity overview and schedule..." rows="2" class="it-desc w-full bg-white border border-slate-200 rounded-lg p-1.5 text-xs outline-none">${desc}</textarea>
+      `;
+      container.appendChild(row);
+    }
+
+    function openPackageModal() {
+      document.getElementById('pkgEditId').value = '';
+      document.getElementById('inpPkgTitle').value = '';
+      document.getElementById('inpPkgCategory').value = 'Cultural';
+      document.getElementById('inpPkgDuration').value = '';
+      document.getElementById('inpPkgPrice').value = '';
+      document.getElementById('inpPkgImage').value = '';
+      document.getElementById('inpPkgDesc').value = '';
+      document.getElementById('inpPkgIncludes').value = 'Private A/C Transport, English Chauffeur Guide, Site Tickets, Hotel Breakfast';
+      
+      const itContainer = document.getElementById('itineraryContainer');
+      itContainer.innerHTML = '';
+      addItineraryDayRow('Day 1', 'Arrival & First Tour', 'Airport greeting and transfer to hotel with scenic stops.');
+      addItineraryDayRow('Day 2', 'Main Excursion', 'Full day guided exploration of key monuments and local viewpoints.');
+
+      document.getElementById('pkgModalHeading').innerText = 'Add New Tour Package';
+      document.getElementById('packageModal').classList.remove('hidden');
+    }
+
+    function editPackage(id) {
+      const p = packagesData.find(x => x._id === id);
+      if (!p) return;
+      document.getElementById('pkgEditId').value = p._id;
+      document.getElementById('inpPkgTitle').value = p.title;
+      document.getElementById('inpPkgCategory').value = p.category || 'Cultural';
+      document.getElementById('inpPkgDuration').value = p.duration;
+      document.getElementById('inpPkgPrice').value = p.priceUSD;
+      document.getElementById('inpPkgImage').value = p.image;
+      document.getElementById('inpPkgDesc').value = p.description;
+      document.getElementById('inpPkgIncludes').value = (p.includes && p.includes.length) 
+        ? p.includes.join(', ') 
+        : 'Private A/C Transport, English Chauffeur Guide, Site Tickets, Hotel Breakfast';
+
+      const itContainer = document.getElementById('itineraryContainer');
+      itContainer.innerHTML = '';
+      
+      if (p.itinerary && p.itinerary.length > 0) {
+        p.itinerary.forEach(it => {
+          addItineraryDayRow(it.day, it.title, it.desc);
+        });
+      } else {
+        addItineraryDayRow('Day 1', 'Sightseeing Tour', 'Initial arrival and excursion.');
+      }
+
+      document.getElementById('pkgModalHeading').innerText = `Edit: ${p.title}`;
+      document.getElementById('packageModal').classList.remove('hidden');
+    }
+
+    function closePackageModal() {
+      document.getElementById('packageModal').classList.add('hidden');
+    }
+
+    async function handlePackageSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('pkgEditId').value;
+      const token = localStorage.getItem('adminToken');
+
+      // Collect Itinerary Rows
+      const itineraryRows = document.querySelectorAll('#itineraryContainer > div');
+      const itineraryArray = [];
+      itineraryRows.forEach(row => {
+        const day = row.querySelector('.it-day').value.trim();
+        const title = row.querySelector('.it-title').value.trim();
+        const desc = row.querySelector('.it-desc').value.trim();
+        if (day && title) {
+          itineraryArray.push({ day, title, desc });
+        }
+      });
+
+      // Collect Includes Array
+      const rawIncludes = document.getElementById('inpPkgIncludes').value;
+      const includesArray = rawIncludes
+        .split(',')
+        .map(item => item.trim())
+        .filter(item => item.length > 0);
+
+      const payload = {
+        title: document.getElementById('inpPkgTitle').value,
+        category: document.getElementById('inpPkgCategory').value,
+        duration: document.getElementById('inpPkgDuration').value,
+        priceUSD: Number(document.getElementById('inpPkgPrice').value),
+        image: document.getElementById('inpPkgImage').value,
+        description: document.getElementById('inpPkgDesc').value,
+        includes: includesArray,
+        itinerary: itineraryArray
+      };
+
+      const url = id ? `${API}/admin/packages/${id}` : `${API}/admin/packages`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closePackageModal();
+        fetchAllData();
+        Swal.fire({ icon: 'success', title: id ? 'Tour Package Updated!' : 'Tour Package Created!' });
+      }
+    }
+
+    async function deletePackage(id) {
+      if (!confirm('Delete this tour package?')) return;
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${API}/admin/packages/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      fetchAllData();
+    }
+
+    // --- SOUVENIRS PRODUCTS CRUD ---
+    function renderProducts() {
+      const grid = document.getElementById('adminProductsGrid');
+      grid.innerHTML = '';
+      productsData.forEach(p => {
+        grid.innerHTML += `
+          <div class="bg-white rounded-2xl border border-slate-200 p-4 flex flex-col justify-between shadow-sm">
+            <div>
+              <img src="${p.image}" class="h-36 w-full object-cover rounded-xl mb-2">
+              <span class="text-[10px] font-bold text-emerald-600 uppercase">${p.category}</span>
+              <h4 class="font-bold text-slate-900 text-sm mt-0.5 line-clamp-1">${p.title}</h4>
+            </div>
+            <div class="mt-4 pt-3 border-t flex justify-between items-center">
+              <span class="font-black text-slate-900">$${p.priceUSD}</span>
+              <div class="flex gap-1.5">
+                <button onclick="editProduct('${p._id}')" class="bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-pen"></i></button>
+                <button onclick="deleteProduct('${p._id}')" class="bg-red-50 text-red-600 px-2.5 py-1.5 rounded-lg text-xs font-bold"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function openProductModal() {
+      document.getElementById('prodEditId').value = '';
+      document.getElementById('inpProdTitle').value = '';
+      document.getElementById('inpProdPrice').value = '';
+      document.getElementById('inpProdWeight').value = '';
+      document.getElementById('inpProdImage').value = '';
+      document.getElementById('inpProdDesc').value = '';
+      document.getElementById('prodModalHeading').innerText = 'Add Souvenir Item';
+      document.getElementById('productModal').classList.remove('hidden');
+    }
+
+    function editProduct(id) {
+      const p = productsData.find(x => x._id === id);
+      if (!p) return;
+      document.getElementById('prodEditId').value = p._id;
+      document.getElementById('inpProdTitle').value = p.title;
+      document.getElementById('inpProdCategory').value = p.category;
+      document.getElementById('inpProdPrice').value = p.priceUSD;
+      document.getElementById('inpProdWeight').value = p.weight || '500g';
+      document.getElementById('inpProdImage').value = p.image;
+      document.getElementById('inpProdDesc').value = p.description;
+      document.getElementById('prodModalHeading').innerText = 'Edit Souvenir Product';
+      document.getElementById('productModal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.add('hidden');
+    }
+
+    async function handleProductSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('prodEditId').value;
+      const token = localStorage.getItem('adminToken');
+      const payload = {
+        title: inpProdTitle.value,
+        category: inpProdCategory.value,
+        priceUSD: Number(inpProdPrice.value),
+        weight: inpProdWeight.value,
+        image: inpProdImage.value,
+        description: inpProdDesc.value
+      };
+
+      const url = id ? `${API}/admin/products/${id}` : `${API}/admin/products`;
+      const method = id ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeProductModal();
+        fetchAllData();
+        Swal.fire({ icon: 'success', title: 'Product Saved!' });
+      }
+    }
+
+    async function deleteProduct(id) {
+      if (!confirm('Delete product?')) return;
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${API}/admin/products/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      fetchAllData();
+    }
+
+    // --- ORDERS & BOOKINGS ---
+    function renderOrders() {
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '';
+      if (!ordersData.length) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center p-6 text-slate-400">No orders placed yet.</td></tr>';
+        return;
+      }
+      ordersData.forEach(o => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-4 font-bold">${o.customerName}<br><span class="text-slate-400 font-normal">${o.customerEmail}</span></td>
+            <td class="p-4 text-slate-600">${o.shippingAddress}<br><span class="font-bold text-slate-800">${o.country}</span></td>
+            <td class="p-4 font-bold">${o.items.length} items</td>
+            <td class="p-4 font-black text-slate-900">$${o.totalUSD}</td>
+            <td class="p-4">
+              <select onchange="updateOrderStatus('${o._id}', this.value)" class="bg-slate-50 border rounded-lg p-1 text-xs font-bold">
+                <option value="Processing" ${o.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                <option value="Shipped" ${o.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="Delivered" ${o.status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${o.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+            </td>
+            <td class="p-4 text-center">
+              <button onclick="deleteOrder('${o._id}')" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    async function updateOrderStatus(id, status) {
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${API}/admin/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ status })
+      });
+      fetchAllData();
+    }
+
+    async function deleteOrder(id) {
+      if (!confirm('Delete order record?')) return;
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${API}/admin/orders/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      fetchAllData();
+    }
+
+    function renderBookings() {
+      const tbody = document.getElementById('bookingsTableBody');
+      tbody.innerHTML = '';
+      bookingsData.forEach(b => {
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-4 font-bold">${b.fullName}<br><span class="text-slate-400 font-normal">${b.email}</span></td>
+            <td class="p-4 text-emerald-600 font-bold">${b.package}</td>
+            <td class="p-4 text-slate-600">${b.travelDate}</td>
+            <td class="p-4">${b.guests}</td>
+            <td class="p-4 font-black">$${b.totalPrice}</td>
+            <td class="p-4 font-bold">${b.status}</td>
+            <td class="p-4 text-center"><button onclick="deleteBooking('${b._id}')" class="text-red-500"><i class="fa-solid fa-trash"></i></button></td>
+          </tr>
+        `;
+      });
+    }
+
+    async function deleteBooking(id) {
+      if (!confirm('Delete booking?')) return;
+      const token = localStorage.getItem('adminToken');
+      await fetch(`${API}/admin/bookings/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      fetchAllData();
+    }
+
+    async function saveSettings(e) {
+      e.preventDefault();
+      const token = localStorage.getItem('adminToken');
+      const payload = {
+        siteName: document.getElementById('setSiteName').value,
+        heroTitle: document.getElementById('setHeroTitle').value,
+        heroSubtitle: document.getElementById('setHeroSubtitle').value,
+        heroImage: document.getElementById('setHeroImage').value,
+        phone: document.getElementById('setPhone').value,
+        email: document.getElementById('setEmail').value,
+        whatsapp: document.getElementById('setWhatsapp').value
+      };
+      const res = await fetch(`${API}/admin/settings`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify(payload)
+      });
+      if ((await res.json()).success) {
+        Swal.fire({ icon: 'success', title: 'Website Settings Updated!' });
+      }
+    }
+  </script>
+</body>
+</html>

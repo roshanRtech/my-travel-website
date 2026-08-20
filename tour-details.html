@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tour Experience | CityToursLanka</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif-editorial { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-[#fcfdfd] text-slate-900 antialiased selection:bg-emerald-600 selection:text-white">
+
+  <!-- Navbar -->
+  <nav class="w-full bg-white/90 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div class="font-serif-editorial text-2xl font-bold text-slate-950">CityTours<span class="text-emerald-700 italic">Lanka</span></div>
+      </a>
+      <div class="flex items-center gap-4">
+        <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-slate-50 text-slate-800 font-bold rounded-xl px-3 py-1.5 border border-slate-200 outline-none text-xs">
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="LKR">LKR (Rs)</option>
+        </select>
+        <a href="index.html#packages" class="text-xs font-bold text-slate-600 hover:text-emerald-700 uppercase tracking-wider">
+          <i class="fa-solid fa-arrow-left mr-1"></i> Back to Tours
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Package Content Area -->
+  <div id="loadingState" class="min-h-[60vh] flex items-center justify-center">
+    <div class="text-center">
+      <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Tour Itinerary...</p>
+    </div>
+  </div>
+
+  <main id="packageContent" class="hidden max-w-7xl mx-auto px-6 py-12">
+    
+    <!-- Hero Image & Header -->
+    <div class="relative h-[480px] rounded-3xl overflow-hidden shadow-2xl mb-12">
+      <img id="pkgImage" src="" class="w-full h-full object-cover">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent"></div>
+      
+      <div class="absolute bottom-8 left-8 right-8 text-white max-w-4xl">
+        <div class="flex items-center gap-3 mb-3">
+          <span id="pkgCategory" class="bg-emerald-600 text-white text-xs font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow"></span>
+          <span id="pkgDuration" class="bg-white/20 backdrop-blur text-white text-xs font-bold px-3.5 py-1 rounded-full"></span>
+        </div>
+        <h1 id="pkgTitle" class="font-serif-editorial text-3xl sm:text-5xl font-bold leading-tight"></h1>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+      
+      <!-- Left Column -->
+      <div class="lg:col-span-2 space-y-10">
+        <div>
+          <h3 class="text-xs font-extrabold uppercase tracking-[0.2em] text-emerald-700 mb-2">Overview</h3>
+          <p id="pkgDesc" class="text-slate-600 text-base leading-relaxed font-normal"></p>
+        </div>
+
+        <div>
+          <h3 class="font-serif-editorial text-2xl font-bold text-slate-950 mb-6">Day-by-Day Experience Timeline</h3>
+          <div id="pkgItinerary" class="space-y-6 border-l-2 border-emerald-500 pl-6 relative"></div>
+        </div>
+
+        <div class="bg-slate-50 p-8 rounded-3xl border border-slate-200">
+          <h3 class="font-serif-editorial text-xl font-bold text-slate-950 mb-4">Included in this Package</h3>
+          <div id="pkgIncludes" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs font-semibold text-slate-700"></div>
+        </div>
+      </div>
+
+      <!-- Right Column: Sticky Booking -->
+      <div class="lg:col-span-1">
+        <div class="sticky top-28 bg-white p-8 rounded-3xl shadow-xl border border-slate-200">
+          
+          <div class="flex justify-between items-baseline mb-6 border-b border-slate-100 pb-4">
+            <div>
+              <span class="text-[10px] uppercase font-extrabold text-slate-400">Starting Rate</span>
+              <div id="pkgPrice" class="font-serif-editorial text-3xl font-bold text-emerald-800"></div>
+            </div>
+            <span class="text-xs text-slate-400 font-medium">per guest</span>
+          </div>
+
+          <form onsubmit="handleDirectBooking(event)" class="space-y-4 text-xs font-semibold">
+            <div>
+              <label class="block text-slate-500 mb-1">Your Full Name</label>
+              <input type="text" id="bName" required placeholder="e.g. David Miller" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Email Address</label>
+              <input type="email" id="bEmail" required placeholder="david@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Travel Date</label>
+              <input type="date" id="bDate" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1">Guests Count</label>
+              <input type="number" id="bGuests" min="1" max="25" value="2" oninput="calculateTotal()" required class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+
+            <div class="bg-emerald-50 p-4 rounded-xl flex justify-between items-center font-bold text-emerald-900 mt-4">
+              <span>Total Estimated:</span>
+              <span id="calculatedTotal" class="font-serif-editorial text-2xl">$0</span>
+            </div>
+
+            <button type="submit" class="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl uppercase tracking-widest text-xs shadow-md transition duration-300">
+              Confirm Reservation & PDF
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    const RATES = { USD: 1, EUR: 0.92, GBP: 0.79, LKR: 310 };
+    const SYMBOLS = { USD: '$', EUR: '€', GBP: '£', LKR: 'Rs.' };
+    let currentCurrency = 'USD';
+    let currentPackage = null;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const pkgId = urlParams.get('id');
+
+      if (!pkgId) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/packages/${pkgId}`);
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          currentPackage = data.data;
+          renderPackageDetails(currentPackage);
+        } else {
+          document.getElementById('loadingState').innerHTML = '<div class="text-red-500 font-bold">Package not found.</div>';
+        }
+      } catch (err) {
+        document.getElementById('loadingState').innerHTML = '<div class="text-red-500 font-bold">Error loading package.</div>';
+      }
+    });
+
+    function renderPackageDetails(pkg) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('packageContent').classList.remove('hidden');
+
+      document.title = `${pkg.title} | CityToursLanka`;
+      document.getElementById('pkgImage').src = pkg.image;
+      document.getElementById('pkgTitle').innerText = pkg.title;
+      document.getElementById('pkgCategory').innerText = pkg.category || 'Tour';
+      document.getElementById('pkgDuration').innerText = pkg.duration;
+      document.getElementById('pkgDesc').innerText = pkg.description;
+
+      const itEl = document.getElementById('pkgItinerary');
+      itEl.innerHTML = '';
+      (pkg.itinerary || [
+        { day: "Day 1", title: "Arrival & Sightseeing", desc: "Private chauffeur greeting and initial landmark tours." },
+        { day: "Day 2", title: "Cultural & Nature Exploration", desc: "Guided exploration of key historical monuments and scenic viewpoints." }
+      ]).forEach(it => {
+        itEl.innerHTML += `
+          <div class="relative">
+            <span class="absolute -left-[31px] top-1 w-3 h-3 rounded-full bg-emerald-600 border-2 border-white shadow"></span>
+            <span class="text-xs font-black uppercase text-emerald-700 tracking-wider">${it.day}</span>
+            <h4 class="font-serif-editorial text-lg font-bold text-slate-900 mt-0.5">${it.title}</h4>
+            <p class="text-xs text-slate-500 mt-1 leading-relaxed">${it.desc}</p>
+          </div>
+        `;
+      });
+
+      const incEl = document.getElementById('pkgIncludes');
+      incEl.innerHTML = '';
+      (pkg.includes || ["Private A/C Transport", "English Chauffeur Guide", "Expressway Tolls", "Site Tickets", "Hotel Breakfast"]).forEach(inc => {
+        incEl.innerHTML += `
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-check text-emerald-600"></i>
+            <span>${inc}</span>
+          </div>
+        `;
+      });
+
+      updatePriceDisplay();
+    }
+
+    function changeCurrency(c) {
+      currentCurrency = c;
+      updatePriceDisplay();
+    }
+
+    function updatePriceDisplay() {
+      if (!currentPackage) return;
+      const conv = Math.round(currentPackage.priceUSD * RATES[currentCurrency]);
+      document.getElementById('pkgPrice').innerText = `${SYMBOLS[currentCurrency]}${conv}`;
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      if (!currentPackage) return { totalUSD: 0, conv: 0 };
+      const guests = parseInt(document.getElementById('bGuests').value) || 1;
+      const totalUSD = currentPackage.priceUSD * guests;
+      const conv = Math.round(totalUSD * RATES[currentCurrency]);
+      document.getElementById('calculatedTotal').innerText = `${SYMBOLS[currentCurrency]}${conv}`;
+      return { totalUSD, conv, guests };
+    }
+
+    async function handleDirectBooking(e) {
+      e.preventDefault();
+      const calc = calculateTotal();
+
+      const payload = {
+        fullName: document.getElementById('bName').value,
+        email: document.getElementById('bEmail').value,
+        package: currentPackage.title,
+        travelDate: document.getElementById('bDate').value,
+        guests: calc.guests,
+        totalPrice: calc.totalUSD
+      };
+
+      try {
+        await fetch(`${API}/bookings`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        generatePDF(payload, calc);
+        Swal.fire({
+          icon: 'success',
+          title: 'Booking Confirmed!',
+          text: 'Your tour reservation is confirmed and PDF voucher has been downloaded.',
+          confirmButtonColor: '#0f172a'
+        });
+      } catch (err) {
+        generatePDF(payload, calc);
+      }
+    }
+
+    function generatePDF(data, calc) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const refId = 'CTL-TR-' + Math.floor(100000 + Math.random() * 900000);
+
+      doc.setFillColor(15, 23, 42);
+      doc.rect(0, 0, 210, 30, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('CITYTOURSLANKA TOUR VOUCHER', 14, 20);
+
+      doc.setTextColor(50, 50, 50);
+      doc.setFontSize(10);
+      doc.text(`Booking Ref: ${refId}`, 140, 42);
+      doc.text(`Guest: ${data.fullName}`, 14, 42);
+      doc.text(`Email: ${data.email}`, 14, 48);
+      doc.text(`Tour: ${data.package}`, 14, 54);
+      doc.text(`Travel Date: ${data.travelDate} (${data.guests} Guests)`, 14, 60);
+      doc.text(`Total Amount: $${calc.totalUSD} USD`, 14, 68);
+
+      doc.save(`CityToursLanka_${refId}.pdf`);
+    }
+  </script>
+</body>
+</html>

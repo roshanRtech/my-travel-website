@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artisan Souvenir | CityToursLanka</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif-editorial { font-family: 'Playfair Display', serif; }
+  </style>
+</head>
+<body class="bg-[#fcfdfd] text-slate-900 antialiased selection:bg-emerald-600 selection:text-white">
+
+  <!-- Navbar -->
+  <nav class="w-full bg-white/90 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div class="font-serif-editorial text-2xl font-bold text-slate-950">CityTours<span class="text-emerald-700 italic">Lanka</span></div>
+      </a>
+      
+      <div class="flex items-center gap-4">
+        <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-slate-50 text-slate-800 font-bold rounded-xl px-3 py-1.5 border border-slate-200 outline-none text-xs">
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="LKR">LKR (Rs)</option>
+        </select>
+        <a href="index.html#shop" class="text-xs font-bold text-slate-600 hover:text-emerald-700 uppercase tracking-wider">
+          <i class="fa-solid fa-arrow-left mr-1"></i> Back to Shop
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div id="loadingState" class="min-h-[60vh] flex items-center justify-center">
+    <div class="text-center">
+      <i class="fa-solid fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
+      <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Loading Product Details...</p>
+    </div>
+  </div>
+
+  <main id="productContent" class="hidden max-w-6xl mx-auto px-6 py-16">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+      
+      <div class="rounded-3xl overflow-hidden border border-slate-200 shadow-xl bg-white p-4">
+        <img id="prodImage" src="" class="w-full h-[450px] object-cover rounded-2xl">
+      </div>
+
+      <div class="space-y-6">
+        <div>
+          <span id="prodCategory" class="text-xs font-extrabold uppercase tracking-[0.25em] text-emerald-700"></span>
+          <h1 id="prodTitle" class="font-serif-editorial text-3xl sm:text-4xl font-bold text-slate-950 mt-1 mb-2"></h1>
+          <div class="flex items-center gap-2 text-amber-500 text-xs">
+            <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            <span class="text-slate-400 font-semibold ml-1">(Certified Ceylon Export Product)</span>
+          </div>
+        </div>
+
+        <div class="flex items-baseline gap-3">
+          <span id="prodPrice" class="font-serif-editorial text-4xl font-bold text-emerald-800"></span>
+          <span id="prodWeight" class="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full"></span>
+        </div>
+
+        <p id="prodDesc" class="text-slate-600 text-sm leading-relaxed font-light border-t border-b border-slate-100 py-4"></p>
+
+        <div class="space-y-4 pt-2">
+          <div class="flex items-center gap-4">
+            <label class="text-xs font-bold text-slate-500 uppercase">Quantity:</label>
+            <div class="flex items-center border border-slate-200 rounded-xl bg-slate-50 p-1">
+              <button onclick="changeQty(-1)" class="w-8 h-8 font-bold text-slate-600 hover:text-black">-</button>
+              <span id="qtyDisplay" class="w-10 text-center text-sm font-bold text-slate-900">1</span>
+              <button onclick="changeQty(1)" class="w-8 h-8 font-bold text-slate-600 hover:text-black">+</button>
+            </div>
+          </div>
+
+          <button onclick="addToCartAndNotify()" class="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl text-xs uppercase tracking-widest transition duration-300 shadow-md flex items-center justify-center gap-2">
+            <i class="fa-solid fa-cart-plus"></i> Add to Shopping Cart
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    const API = 'http://localhost:5000/api';
+    const RATES = { USD: 1, EUR: 0.92, GBP: 0.79, LKR: 310 };
+    const SYMBOLS = { USD: '$', EUR: '€', GBP: '£', LKR: 'Rs.' };
+    let currentCurrency = 'USD';
+    let currentProduct = null;
+    let selectedQty = 1;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const prodId = urlParams.get('id');
+
+      if (!prodId) {
+        window.location.href = 'index.html';
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API}/products/${prodId}`);
+        const data = await res.json();
+
+        if (data.success && data.data) {
+          currentProduct = data.data;
+          renderProductDetails(currentProduct);
+        } else {
+          document.getElementById('loadingState').innerHTML = '<div class="text-red-500 font-bold">Product not found.</div>';
+        }
+      } catch (err) {
+        document.getElementById('loadingState').innerHTML = '<div class="text-red-500 font-bold">Error connecting to server.</div>';
+      }
+    });
+
+    function renderProductDetails(prod) {
+      document.getElementById('loadingState').classList.add('hidden');
+      document.getElementById('productContent').classList.remove('hidden');
+
+      document.title = `${prod.title} | CityToursLanka Souvenirs`;
+      document.getElementById('prodImage').src = prod.image;
+      document.getElementById('prodTitle').innerText = prod.title;
+      document.getElementById('prodCategory').innerText = prod.category;
+      document.getElementById('prodWeight').innerText = prod.weight || '500g';
+      document.getElementById('prodDesc').innerText = prod.description || 'Authentic single-origin Ceylon product crafted with premium export quality standards.';
+
+      updatePrice();
+    }
+
+    function changeQty(delta) {
+      selectedQty = Math.max(1, selectedQty + delta);
+      document.getElementById('qtyDisplay').innerText = selectedQty;
+    }
+
+    function changeCurrency(c) {
+      currentCurrency = c;
+      updatePrice();
+    }
+
+    function updatePrice() {
+      if (!currentProduct) return;
+      const conv = Math.round(currentProduct.priceUSD * RATES[currentCurrency]);
+      document.getElementById('prodPrice').innerText = `${SYMBOLS[currentCurrency]}${conv}`;
+    }
+
+    function addToCartAndNotify() {
+      if (!currentProduct) return;
+      let cart = JSON.parse(localStorage.getItem('cityToursCart') || '[]');
+      const exist = cart.find(i => i.productId === currentProduct._id);
+
+      if (exist) {
+        exist.quantity += selectedQty;
+      } else {
+        cart.push({
+          productId: currentProduct._id,
+          title: currentProduct.title,
+          priceUSD: Number(currentProduct.priceUSD),
+          quantity: selectedQty
+        });
+      }
+
+      localStorage.setItem('cityToursCart', JSON.stringify(cart));
+      Swal.fire({
+        icon: 'success',
+        title: 'Added to Bag!',
+        text: `${selectedQty}x "${currentProduct.title}" added to your cart.`,
+        confirmButtonColor: '#0f172a'
+      });
+    }
+  </script>
+</body>
+</html>

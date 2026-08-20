@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="docTitle">CityToursLanka | Official Sri Lanka Travel & Souvenirs</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;0,800;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    .font-serif-editorial { font-family: 'Playfair Display', serif; }
+    #map { height: 420px; border-radius: 2rem; z-index: 10; }
+    
+    @keyframes kenburns {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    .kenburns-active { animation: kenburns 22s ease-in-out infinite alternate; }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0.6); }
+      70% { box-shadow: 0 0 0 16px rgba(5, 150, 105, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(5, 150, 105, 0); }
+    }
+    .whatsapp-glow { animation: pulse-ring 2.5s infinite; }
+  </style>
+</head>
+<body class="bg-[#fcfdfd] text-slate-900 antialiased relative selection:bg-emerald-600 selection:text-white">
+
+  <!-- 1. TOP UTILITY STRIP -->
+  <div class="bg-white/80 backdrop-blur-md text-slate-500 text-[11px] font-semibold py-2 px-6 border-b border-slate-100 sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-6">
+        <span class="hover:text-emerald-700 transition cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-phone text-emerald-600"></i> <span class="dyn-phone">+94 77 123 4567</span></span>
+        <span class="hidden sm:inline hover:text-emerald-700 transition cursor-pointer flex items-center gap-1.5"><i class="fa-solid fa-envelope text-emerald-600"></i> <span class="dyn-email">explore@citytourslanka.com</span></span>
+        <span class="hidden md:inline bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded-full text-[10px] tracking-wider uppercase font-bold">SLTDA Certified DMC</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-slate-400">Currency:</span>
+        <select id="currencySelect" onchange="changeCurrency(this.value)" class="bg-slate-50 text-slate-800 font-bold rounded-lg px-2 py-0.5 border border-slate-200 outline-none cursor-pointer text-[11px]">
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="LKR">LKR (Rs)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. NAVBAR -->
+  <nav class="w-full bg-white/90 backdrop-blur-xl border-b border-slate-200/60 sticky top-8 z-40">
+    <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+      <a href="index.html" class="flex items-center gap-3 group">
+        <div class="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center font-black shadow-md group-hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-compass text-lg"></i>
+        </div>
+        <div>
+          <div class="font-serif-editorial text-2xl font-bold tracking-tight text-slate-950 leading-none dyn-site-name">CityTours<span class="text-emerald-700 italic">Lanka</span></div>
+          <div class="text-[9px] uppercase tracking-[0.25em] text-slate-400 font-extrabold mt-1">Visit Sri Lanka Official</div>
+        </div>
+      </a>
+
+      <div class="hidden lg:flex items-center gap-8 font-bold text-slate-600 text-xs tracking-wider uppercase">
+        <a href="#regions" class="hover:text-emerald-700 transition">Regions</a>
+        <a href="#packages" class="hover:text-emerald-700 transition">Tours</a>
+        <a href="#shop" class="hover:text-emerald-700 transition flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-ping"></span>
+          Ceylon Souvenirs
+        </a>
+        <a href="#customizer" class="hover:text-emerald-700 transition">Trip Planner</a>
+        <a href="#destinations" class="hover:text-emerald-700 transition">Map Route</a>
+        <a href="#faq" class="hover:text-emerald-700 transition">FAQ</a>
+      </div>
+
+      <div class="flex items-center gap-3.5">
+        <button onclick="toggleCartDrawer()" class="relative bg-slate-100 hover:bg-slate-200 text-slate-900 p-3 rounded-2xl transition">
+          <i class="fa-solid fa-bag-shopping text-sm"></i>
+          <span id="cartBadge" class="absolute -top-1.5 -right-1.5 bg-emerald-600 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center shadow-md">0</span>
+        </button>
+        <a href="#booking" class="bg-slate-900 hover:bg-emerald-700 text-white font-bold px-6 py-3 rounded-2xl transition text-xs uppercase tracking-widest shadow-md">
+          Book Tour
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 3. HERO SECTION -->
+  <section class="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
+    <div class="absolute inset-0 z-0">
+      <img id="dynHeroImg" src="https://images.unsplash.com/photo-1546708973-b339540b5162?auto=format&fit=crop&w=2000&q=85" 
+           alt="Sri Lanka" class="w-full h-full object-cover kenburns-active transition-opacity duration-1000">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/50"></div>
+    </div>
+
+    <div class="relative z-10 max-w-5xl mx-auto px-6 text-center text-white mt-12 mb-10">
+      <div data-aos="fade-down" class="inline-flex items-center gap-2 bg-white/10 border border-white/20 backdrop-blur-md px-4 py-1.5 rounded-full text-xs font-extrabold uppercase tracking-[0.2em] mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        Authentic Tropical Journeys • Serendipity Awaits
+      </div>
+
+      <h1 id="dynHeroTitle" data-aos="zoom-in" class="font-serif-editorial text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.05] drop-shadow-2xl mb-6">
+        Pure Wonder. <br>
+        <span class="italic text-emerald-300 font-normal">Untamed</span> Island.
+      </h1>
+
+      <p id="dynHeroSubtitle" data-aos="fade-up" data-aos-delay="100" class="text-base sm:text-lg text-slate-200 max-w-2xl mx-auto font-light leading-relaxed drop-shadow mb-10">
+        From misty mountain peaks and UNESCO royal fortresses to wild ocean shores. Experience private chauffeured journeys curated by local masters.
+      </p>
+
+      <!-- Search Filter Bar -->
+      <div data-aos="fade-up" data-aos-delay="200" class="bg-white/95 backdrop-blur-2xl p-4 sm:p-5 rounded-3xl shadow-2xl max-w-4xl mx-auto text-slate-900 border border-white/40">
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-left">
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400 mb-1 ml-1">Destination / Keyword</label>
+            <input type="text" id="searchInput" oninput="applyFilters()" placeholder="e.g. Sigiriya, Ella, Whale" class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-emerald-600 focus:bg-white transition">
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400 mb-1 ml-1">Category</label>
+            <select id="searchCategory" onchange="applyFilters()" class="w-full bg-slate-100 border border-slate-200 rounded-2xl px-3.5 py-2.5 text-xs font-bold outline-none focus:border-emerald-600 cursor-pointer">
+              <option value="All">All Experiences</option>
+              <option value="Cultural">🏛️ Cultural & Royal</option>
+              <option value="Adventure">🧗 Highlands & Rails</option>
+              <option value="Beach">🏖️ Coast & Whales</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400 mb-1 ml-1">Max Budget: <span id="maxPriceLabel" class="text-emerald-700 font-extrabold">$500</span></label>
+            <input type="range" id="priceRange" min="150" max="600" step="10" value="600" oninput="updatePriceSlider(this.value)" class="w-full h-2 mt-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600">
+          </div>
+          <div class="flex items-end">
+            <button onclick="document.getElementById('packages').scrollIntoView({behavior: 'smooth'})" class="w-full bg-slate-950 hover:bg-emerald-700 text-white font-bold py-3 rounded-2xl text-xs uppercase tracking-widest transition shadow-md flex items-center justify-center gap-2">
+              <i class="fa-solid fa-compass"></i> Discover
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 4. REGION MOSAICS -->
+  <section id="regions" class="max-w-7xl mx-auto py-24 px-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-14 gap-4" data-aos="fade-up">
+      <div>
+        <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Territories of Ceylon</span>
+        <h2 class="font-serif-editorial text-3xl sm:text-4xl lg:text-5xl font-bold text-slate-950 mt-1">Explore Distinct Regions</h2>
+      </div>
+      <p class="text-slate-500 text-xs sm:text-sm max-w-md leading-relaxed">
+        Select a region to uncover ancient kingdoms, misty mountain peaks, or golden coastal shores.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6" data-aos="fade-up">
+      <div onclick="filterCategory('Cultural')" class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+        <img src="https://images.unsplash.com/photo-1586861635167-e5223aadc9fe?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 right-6 text-white">
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">UNESCO Heritage</span>
+          <h3 class="font-serif-editorial text-2xl font-bold mt-0.5">Cultural Triangle</h3>
+          <p class="text-xs text-slate-300 font-light mt-1 opacity-90">Sigiriya Rock fortress & royal temples.</p>
+        </div>
+      </div>
+
+      <div onclick="filterCategory('Adventure')" class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+        <img src="https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 right-6 text-white">
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Misty Mountains</span>
+          <h3 class="font-serif-editorial text-2xl font-bold mt-0.5">Hill Country & Ella</h3>
+          <p class="text-xs text-slate-300 font-light mt-1 opacity-90">Colonial blue train & tea trails.</p>
+        </div>
+      </div>
+
+      <div onclick="filterCategory('Beach')" class="group relative h-96 rounded-3xl overflow-hidden cursor-pointer shadow-lg">
+        <img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <div class="absolute bottom-6 left-6 right-6 text-white">
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-300">Golden Shores</span>
+          <h3 class="font-serif-editorial text-2xl font-bold mt-0.5">Southern Coast</h3>
+          <p class="text-xs text-slate-300 font-light mt-1 opacity-90">Galle Dutch Fort & whale watching.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. TOUR PACKAGES SECTION -->
+  <section id="packages" class="max-w-7xl mx-auto py-16 px-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-4" data-aos="fade-up">
+      <div>
+        <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Handpicked Journeys</span>
+        <h2 class="font-serif-editorial text-3xl sm:text-4xl font-bold text-slate-950 mt-1">Curated Tour Packages</h2>
+        <p class="text-slate-500 text-xs mt-1">Click on any card to view detailed day-by-day itineraries.</p>
+      </div>
+
+      <div class="flex flex-wrap gap-2">
+        <button onclick="filterCategory('All')" class="cat-pill active bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full transition" data-category="All">All Tours</button>
+        <button onclick="filterCategory('Cultural')" class="cat-pill bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-full transition" data-category="Cultural">Cultural</button>
+        <button onclick="filterCategory('Adventure')" class="cat-pill bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-full transition" data-category="Adventure">Highlands</button>
+        <button onclick="filterCategory('Beach')" class="cat-pill bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-full transition" data-category="Beach">Coastal</button>
+      </div>
+    </div>
+
+    <div id="packagesGrid" class="grid grid-cols-1 md:grid-cols-3 gap-8"></div>
+  </section>
+
+  <!-- 6. SOUVENIR SHOP SECTION -->
+  <section id="shop" class="bg-slate-50 py-24 px-6 border-t border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-4" data-aos="fade-up">
+        <div>
+          <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Ceylon Heritage Shop</span>
+          <h2 class="font-serif-editorial text-3xl sm:text-4xl font-bold text-slate-950 mt-1">Authentic Local Souvenirs</h2>
+          <p class="text-slate-500 text-xs sm:text-sm mt-1">Single-estate pure Ceylon tea, spices, and handmade master masks.</p>
+        </div>
+
+        <div class="flex flex-wrap gap-2">
+          <button onclick="filterShop('All')" class="shop-pill active bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full transition" data-cat="All">All Items</button>
+          <button onclick="filterShop('Tea')" class="shop-pill bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2 rounded-full transition" data-cat="Tea">Ceylon Tea</button>
+          <button onclick="filterShop('Spices')" class="shop-pill bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2 rounded-full transition" data-cat="Spices">Spices</button>
+          <button onclick="filterShop('Handicrafts')" class="shop-pill bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2 rounded-full transition" data-cat="Handicrafts">Handicrafts</button>
+        </div>
+      </div>
+
+      <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </div>
+  </section>
+
+  <!-- 7. CUSTOM TRIP PLANNER -->
+  <section id="customizer" class="max-w-5xl mx-auto py-24 px-6" data-aos="fade-up">
+    <div class="text-center max-w-2xl mx-auto mb-12">
+      <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Tailor-Made Holidays</span>
+      <h2 class="font-serif-editorial text-3xl sm:text-4xl font-bold text-slate-950 mt-1">Build Your Custom Itinerary</h2>
+    </div>
+
+    <div class="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-slate-200 grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2 space-y-6">
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2.5">1. Select Stopovers</label>
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs font-semibold">
+            <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-600">
+              <input type="checkbox" class="custom-dest" value="50" onchange="calculateCustomTrip()" checked class="text-emerald-600">
+              <span>Sigiriya Fortress</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-600">
+              <input type="checkbox" class="custom-dest" value="40" onchange="calculateCustomTrip()" checked class="text-emerald-600">
+              <span>Kandy Royal City</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-600">
+              <input type="checkbox" class="custom-dest" value="60" onchange="calculateCustomTrip()" checked class="text-emerald-600">
+              <span>Ella Nine Arch</span>
+            </label>
+            <label class="flex items-center gap-2 p-3 bg-slate-50 rounded-2xl border border-slate-200 cursor-pointer hover:border-emerald-600">
+              <input type="checkbox" class="custom-dest" value="45" onchange="calculateCustomTrip()" class="text-emerald-600">
+              <span>Galle Lighthouse</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs font-semibold">
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">2. Accommodation Tier</label>
+            <select id="customHotel" onchange="calculateCustomTrip()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl p-3 outline-none">
+              <option value="40">3-Star Boutique (+$40/night)</option>
+              <option value="90" selected>4-Star Luxury (+$90/night)</option>
+              <option value="180">5-Star Resorts (+$180/night)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">3. Chauffeur Transport</label>
+            <select id="customVehicle" onchange="calculateCustomTrip()" class="w-full bg-slate-50 border border-slate-300 rounded-2xl p-3 outline-none">
+              <option value="30">Private Sedan Car (+$30/day)</option>
+              <option value="55" selected>Luxury Tour Van (+$55/day)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-slate-900 text-white p-7 rounded-3xl flex flex-col justify-between shadow-lg">
+        <div>
+          <span class="text-[10px] font-extrabold uppercase tracking-widest text-emerald-400">Custom Estimate</span>
+          <div id="customEstimatedPrice" class="font-serif-editorial text-4xl font-bold my-2 text-white">$335</div>
+          <p class="text-xs text-slate-300 leading-relaxed font-light">Includes private chauffeur-guide, fuel, toll charges, selected hotel stays, and entrance admissions.</p>
+        </div>
+        <button onclick="prefillCustomBooking()" class="w-full mt-6 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3.5 rounded-2xl text-xs uppercase tracking-widest transition shadow-md">
+          Book This Plan
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. GEO-ROUTE INTERACTIVE MAP -->
+  <section id="destinations" class="max-w-7xl mx-auto py-12 px-6" data-aos="fade-up">
+    <div class="bg-white p-6 sm:p-8 rounded-3xl shadow-xl border border-slate-200">
+      <div class="mb-6 flex justify-between items-center">
+        <div>
+          <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Interactive Route</span>
+          <h2 class="font-serif-editorial text-2xl sm:text-3xl font-bold text-slate-950 mt-0.5">Sri Lanka Destination Explorer</h2>
+        </div>
+        <span class="text-xs font-bold bg-slate-100 text-slate-800 px-3.5 py-1.5 rounded-full">
+          <i class="fa-solid fa-location-dot text-emerald-600 mr-1"></i> Live Geo Explorer
+        </span>
+      </div>
+      <div id="map"></div>
+    </div>
+  </section>
+
+  <!-- 9. TOUR RESERVATION FORM -->
+  <section id="booking" class="bg-slate-50 py-24 px-6 border-t border-slate-200" data-aos="fade-up">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Direct Booking</span>
+        <h2 class="font-serif-editorial text-3xl sm:text-4xl font-bold text-slate-950 mt-1">Reserve Your Tour</h2>
+      </div>
+
+      <div class="bg-white p-8 sm:p-12 rounded-3xl shadow-xl border border-slate-200">
+        <form onsubmit="handleTourBooking(event)" class="space-y-5 text-xs font-semibold">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+            <div>
+              <label class="block text-slate-500 mb-1.5">Your Full Name</label>
+              <input type="text" id="bName" required placeholder="e.g. John Doe" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-sm text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1.5">Email Address</label>
+              <input type="email" id="bEmail" required placeholder="john@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-sm text-slate-900 outline-none focus:border-emerald-600 font-bold">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div>
+              <label class="block text-slate-500 mb-1.5">Select Tour</label>
+              <select id="bPkg" onchange="calculateTourTotal()" class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs font-bold outline-none cursor-pointer"></select>
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1.5">Travel Date</label>
+              <input type="date" id="bDate" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs font-bold outline-none cursor-pointer">
+            </div>
+            <div>
+              <label class="block text-slate-500 mb-1.5">Guests Count</label>
+              <input type="number" id="bGuests" min="1" max="25" value="2" oninput="calculateTourTotal()" required class="w-full bg-slate-50 border border-slate-200 rounded-2xl p-3.5 text-xs font-bold outline-none">
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between bg-slate-50 border border-slate-200 p-5 rounded-2xl">
+            <div>
+              <div class="text-xs font-bold text-slate-500 uppercase">Estimated Total Cost:</div>
+              <div class="text-[11px] text-slate-400 font-normal">All taxes, chauffeur allowance, and fees included</div>
+            </div>
+            <div id="bTotal" class="font-serif-editorial text-3xl font-bold text-emerald-800">$0</div>
+          </div>
+
+          <button type="submit" class="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl uppercase tracking-widest text-xs shadow-lg transition duration-300 flex items-center justify-center gap-2">
+            <i class="fa-solid fa-file-invoice"></i> Confirm Booking & Download PDF
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- 10. FAQS -->
+  <section id="faq" class="max-w-3xl mx-auto py-20 px-6" data-aos="fade-up">
+    <div class="text-center mb-10">
+      <span class="text-emerald-700 text-xs font-extrabold uppercase tracking-[0.25em]">Good to Know</span>
+      <h2 class="font-serif-editorial text-3xl font-bold text-slate-950 mt-1">Frequently Asked Questions</h2>
+    </div>
+    <div class="space-y-4 text-xs font-semibold">
+      <div class="border border-slate-200 rounded-2xl p-5 cursor-pointer bg-white" onclick="toggleFaq(this)">
+        <div class="flex justify-between items-center text-sm font-bold text-slate-900">
+          <span>Are chauffeur allowances and highway tolls covered?</span>
+          <i class="fa-solid fa-chevron-down text-xs text-slate-400 transition"></i>
+        </div>
+        <p class="hidden text-slate-500 text-xs mt-3 leading-relaxed font-normal">Yes! Every tour package includes fuel, private air-conditioned vehicle, licensed English-speaking chauffeur guide, accommodation for the driver, and expressway tolls.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11. CART DRAWER -->
+  <div id="cartDrawer" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onclick="toggleCartDrawer()"></div>
+    <div class="absolute inset-y-0 right-0 max-w-md w-full bg-white shadow-2xl flex flex-col z-10">
+      <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+        <div>
+          <h3 class="font-serif-editorial text-lg font-bold text-slate-900">Your Souvenirs Cart</h3>
+          <p class="text-[11px] text-slate-400">Authentic Ceylon products</p>
+        </div>
+        <button onclick="toggleCartDrawer()" class="text-slate-400 hover:text-slate-700 p-2"><i class="fa-solid fa-xmark text-lg"></i></button>
+      </div>
+
+      <div id="cartItemsList" class="p-6 overflow-y-auto flex-1 space-y-3"></div>
+
+      <div class="p-6 bg-slate-50 border-t border-slate-100 space-y-4">
+        <div class="flex justify-between items-center font-bold">
+          <span class="text-slate-500 text-xs uppercase">Subtotal:</span>
+          <span id="cartSubtotal" class="font-serif-editorial text-2xl text-emerald-800">$0</span>
+        </div>
+        <button onclick="openCheckoutModal()" class="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl text-xs uppercase tracking-widest shadow-md transition">
+          Proceed to Order Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 12. CHECKOUT MODAL -->
+  <div id="checkoutModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white max-w-lg w-full rounded-3xl p-8 shadow-2xl border border-slate-100">
+      <div class="flex justify-between items-center mb-4 pb-2 border-b border-slate-100">
+        <div>
+          <h3 class="font-serif-editorial text-xl font-bold text-slate-900">Souvenir Order Delivery</h3>
+          <p class="text-[11px] text-slate-400">Direct hotel delivery or international shipping</p>
+        </div>
+        <button onclick="closeCheckoutModal()" class="text-slate-400 hover:text-slate-700 p-1"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleShopOrder(event)" class="space-y-3.5 text-xs font-semibold">
+        <div>
+          <label class="block text-slate-500 mb-1">Customer Full Name</label>
+          <input type="text" id="chkName" required placeholder="e.g. David Miller" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Email Address</label>
+          <input type="email" id="chkEmail" required placeholder="david@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Hotel in Sri Lanka or International Address</label>
+          <textarea id="chkAddress" rows="2" required placeholder="Hotel room number in Colombo or international address" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold"></textarea>
+        </div>
+        <div>
+          <label class="block text-slate-500 mb-1">Destination Country</label>
+          <input type="text" id="chkCountry" required placeholder="e.g. United Kingdom / Germany / Local" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-emerald-600 font-bold">
+        </div>
+
+        <div class="bg-slate-50 p-4 rounded-xl flex justify-between items-center font-bold text-slate-800 text-xs">
+          <span>Grand Total:</span>
+          <span id="chkTotalDisplay" class="font-serif-editorial text-xl font-bold text-emerald-800">$0</span>
+        </div>
+
+        <button type="submit" id="btnSubmitOrder" class="w-full bg-slate-900 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl uppercase tracking-widest text-xs shadow-md transition">
+          Confirm Order & Download Receipt
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- 13. FLOATING WHATSAPP -->
+  <a id="dynWhatsapp" href="https://wa.me/94771234567" target="_blank" 
+     class="fixed bottom-6 right-6 z-40 bg-emerald-600 hover:bg-emerald-700 text-white w-14 h-14 rounded-full flex items-center justify-center shadow-2xl whatsapp-glow hover:scale-110 transition duration-300">
+    <i class="fa-brands fa-whatsapp text-3xl"></i>
+  </a>
+
+  <!-- 14. FOOTER -->
+  <footer class="bg-slate-950 text-slate-400 py-16 px-6 text-xs">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-6 border-b border-slate-800 pb-10">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-700 text-white flex items-center justify-center font-bold">
+          <i class="fa-solid fa-compass"></i>
+        </div>
+        <div>
+          <div class="font-serif-editorial text-xl font-bold text-white dyn-site-name">CityTours<span class="text-emerald-400 italic">Lanka</span></div>
+          <div class="text-[9px] uppercase tracking-widest text-slate-500">Official Destination Operator</div>
+        </div>
+      </div>
+      <div class="text-slate-400 text-center sm:text-right font-light">
+        Contact: <span class="dyn-phone font-semibold text-white">+94 77 123 4567</span> | <span class="dyn-email font-semibold text-white">explore@citytourslanka.com</span>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto pt-8 text-center text-slate-500 text-[11px]">
+      &copy; 2026 CityToursLanka. All rights reserved.
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    const API = 'http://localhost:5000/api';
+    let allPackages = [];
+    let allProducts = [];
+    let cart = JSON.parse(localStorage.getItem('cityToursCart') || '[]');
+    let selectedCategory = 'All';
+    let selectedShopCategory = 'All';
+    let maxPriceFilter = 600;
+
+    const RATES = { USD: 1, EUR: 0.92, GBP: 0.79, LKR: 310 };
+    const SYMBOLS = { USD: '$', EUR: '€', GBP: '£', LKR: 'Rs.' };
+    let currentCurrency = 'USD';
+
+    document.addEventListener('DOMContentLoaded', () => {
+      AOS.init({ duration: 750, once: true });
+      loadCMSData();
+      loadData();
+      initMap();
+      calculateCustomTrip();
+      updateCartUI();
+    });
+
+    async function loadCMSData() {
+      try {
+        const res = await fetch(`${API}/settings`);
+        const { data: s } = await res.json();
+        if (s) {
+          document.querySelectorAll('.dyn-site-name').forEach(e => e.innerText = s.siteName || 'CityToursLanka');
+          document.querySelectorAll('.dyn-phone').forEach(e => e.innerText = s.phone || '+94 77 123 4567');
+          document.querySelectorAll('.dyn-email').forEach(e => e.innerText = s.email || 'explore@citytourslanka.com');
+          if (document.getElementById('dynHeroTitle') && s.heroTitle) document.getElementById('dynHeroTitle').innerText = s.heroTitle;
+          if (document.getElementById('dynHeroSubtitle') && s.heroSubtitle) document.getElementById('dynHeroSubtitle').innerText = s.heroSubtitle;
+          if (document.getElementById('dynHeroImg') && s.heroImage) document.getElementById('dynHeroImg').src = s.heroImage;
+          if (document.getElementById('dynWhatsapp') && s.whatsapp) document.getElementById('dynWhatsapp').href = `https://wa.me/${s.whatsapp}?text=Hello`;
+          document.getElementById('docTitle').innerText = `${s.siteName || 'CityToursLanka'} | Official Travel & Souvenirs`;
+        }
+      } catch (err) {
+        console.warn('CMS load error');
+      }
+    }
+
+    async function loadData() {
+      try {
+        const [pkgRes, prodRes] = await Promise.all([
+          fetch(`${API}/packages`),
+          fetch(`${API}/products`)
+        ]);
+        allPackages = (await pkgRes.json()).data || [];
+        allProducts = (await prodRes.json()).data || [];
+      } catch (err) {
+        console.warn('Backend offline');
+      }
+      applyFilters();
+      renderProducts();
+      populateTourSelect();
+    }
+
+    function updatePriceSlider(val) {
+      maxPriceFilter = Number(val);
+      document.getElementById('maxPriceLabel').innerText = `$${val}`;
+      applyFilters();
+    }
+
+    function filterCategory(cat) {
+      selectedCategory = cat;
+      document.querySelectorAll('.cat-pill').forEach(btn => {
+        if (btn.dataset.category === cat) {
+          btn.className = 'cat-pill active bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full transition shadow-sm';
+        } else {
+          btn.className = 'cat-pill bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-full transition';
+        }
+      });
+      applyFilters();
+      document.getElementById('packages').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function applyFilters() {
+      const q = document.getElementById('searchInput')?.value.toLowerCase() || '';
+      const catSelect = document.getElementById('searchCategory')?.value || 'All';
+      const effectiveCat = catSelect !== 'All' ? catSelect : selectedCategory;
+
+      let filtered = allPackages.filter(p => {
+        const matchesCat = (effectiveCat === 'All' || p.category === effectiveCat);
+        const matchesQuery = p.title.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+        const matchesPrice = p.priceUSD <= maxPriceFilter;
+        return matchesCat && matchesQuery && matchesPrice;
+      });
+
+      renderPackages(filtered);
+    }
+
+    function renderPackages(packages) {
+      const grid = document.getElementById('packagesGrid');
+      grid.innerHTML = '';
+
+      if (!packages.length) {
+        grid.innerHTML = '<div class="col-span-3 text-center py-12 text-slate-400">No itineraries match your search.</div>';
+        return;
+      }
+
+      packages.forEach(p => {
+        const conv = Math.round(p.priceUSD * RATES[currentCurrency]);
+        grid.innerHTML += `
+          <div class="bg-white rounded-3xl overflow-hidden border border-slate-200/80 shadow-md hover:shadow-xl transition duration-500 flex flex-col justify-between group">
+            <div>
+              <a href="tour-details.html?id=${p._id}" class="block relative h-60 overflow-hidden cursor-pointer">
+                <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                <span class="absolute top-4 left-4 bg-white/95 backdrop-blur text-slate-900 text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full shadow">${p.category}</span>
+                <span class="absolute top-4 right-4 bg-slate-900/80 text-white text-xs font-semibold px-3 py-1 rounded-full">${p.duration}</span>
+              </a>
+              <div class="p-6">
+                <a href="tour-details.html?id=${p._id}">
+                  <h3 class="font-serif-editorial text-xl font-bold text-slate-900 mb-2 hover:text-emerald-700 transition">${p.title}</h3>
+                </a>
+                <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed font-light">${p.description}</p>
+              </div>
+            </div>
+            <div class="p-6 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
+              <div>
+                <span class="text-[10px] text-slate-400 uppercase font-bold">From</span>
+                <div class="font-serif-editorial text-2xl font-bold text-emerald-800">${SYMBOLS[currentCurrency]}${conv}</div>
+              </div>
+              <a href="tour-details.html?id=${p._id}" class="bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold px-5 py-2.5 rounded-2xl transition uppercase tracking-wider">
+                View Tour
+              </a>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function filterShop(cat) {
+      selectedShopCategory = cat;
+      document.querySelectorAll('.shop-pill').forEach(btn => {
+        if (btn.dataset.cat === cat) {
+          btn.className = 'shop-pill active bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full transition';
+        } else {
+          btn.className = 'shop-pill bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold px-4 py-2 rounded-full transition';
+        }
+      });
+      renderProducts();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('productsGrid');
+      grid.innerHTML = '';
+      const filtered = selectedShopCategory === 'All' ? allProducts : allProducts.filter(p => p.category === selectedShopCategory);
+
+      filtered.forEach(p => {
+        const conv = Math.round(p.priceUSD * RATES[currentCurrency]);
+        grid.innerHTML += `
+          <div class="bg-white rounded-3xl border border-slate-200/80 p-4 shadow-sm hover:shadow-lg transition flex flex-col justify-between group">
+            <div>
+              <a href="product-details.html?id=${p._id}" class="block relative h-44 rounded-2xl overflow-hidden mb-3 cursor-pointer">
+                <img src="${p.image}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                <span class="absolute top-2.5 left-2.5 bg-slate-900/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-md">${p.weight || '500g'}</span>
+              </a>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700">${p.category}</span>
+              <a href="product-details.html?id=${p._id}">
+                <h4 class="font-serif-editorial text-sm font-bold text-slate-900 mt-0.5 line-clamp-1 hover:text-emerald-700 transition">${p.title}</h4>
+              </a>
+            </div>
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
+              <span class="font-serif-editorial text-lg font-bold text-slate-900">${SYMBOLS[currentCurrency]}${conv}</span>
+              <a href="product-details.html?id=${p._id}" class="bg-slate-900 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl transition">
+                View Item
+              </a>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function updateCartUI() {
+      document.getElementById('cartBadge').innerText = cart.reduce((s, i) => s + i.quantity, 0);
+      const list = document.getElementById('cartItemsList');
+      let subtotalUSD = 0;
+
+      if (!cart.length) {
+        list.innerHTML = '<div class="text-center text-slate-400 py-12 text-xs">Your shopping bag is empty.</div>';
+      } else {
+        list.innerHTML = '';
+        cart.forEach(it => {
+          const itTotal = it.priceUSD * it.quantity;
+          subtotalUSD += itTotal;
+          const conv = Math.round(itTotal * RATES[currentCurrency]);
+          list.innerHTML += `
+            <div class="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs">
+              <div class="flex-1 mr-2">
+                <div class="font-bold text-slate-900 line-clamp-1">${it.title}</div>
+                <div class="text-emerald-700 font-bold mt-0.5">${SYMBOLS[currentCurrency]}${conv}</div>
+              </div>
+              <div class="flex items-center gap-2 bg-white px-2 py-1 rounded-xl border border-slate-200 font-bold">
+                <button onclick="updateQuantity('${it.productId}', -1)" class="px-1 text-slate-400 hover:text-slate-900">-</button>
+                <span>${it.quantity}</span>
+                <button onclick="updateQuantity('${it.productId}', 1)" class="px-1 text-slate-400 hover:text-slate-900">+</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      const convSub = Math.round(subtotalUSD * RATES[currentCurrency]);
+      document.getElementById('cartSubtotal').innerText = `${SYMBOLS[currentCurrency]}${convSub}`;
+    }
+
+    function updateQuantity(id, delta) {
+      const it = cart.find(i => i.productId === id);
+      if (!it) return;
+      it.quantity += delta;
+      if (it.quantity <= 0) cart = cart.filter(i => i.productId !== id);
+      localStorage.setItem('cityToursCart', JSON.stringify(cart));
+      updateCartUI();
+    }
+
+    function toggleCartDrawer() {
+      document.getElementById('cartDrawer').classList.toggle('hidden');
+    }
+
+    function openCheckoutModal() {
+      if (!cart.length) return Swal.fire({ icon: 'info', title: 'Cart Empty' });
+      toggleCartDrawer();
+      const totalUSD = cart.reduce((s, i) => s + (i.priceUSD * i.quantity), 0);
+      const conv = Math.round(totalUSD * RATES[currentCurrency]);
+      document.getElementById('chkTotalDisplay').innerText = `${SYMBOLS[currentCurrency]}${conv} ($${totalUSD} USD)`;
+      document.getElementById('checkoutModal').classList.remove('hidden');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkoutModal').classList.add('hidden');
+    }
+
+    async function handleShopOrder(e) {
+      e.preventDefault();
+      if (!cart.length) return;
+
+      const totalUSD = cart.reduce((sum, i) => sum + (Number(i.priceUSD) * Number(i.quantity)), 0);
+
+      const orderPayload = {
+        customerName: document.getElementById('chkName').value,
+        customerEmail: document.getElementById('chkEmail').value,
+        shippingAddress: document.getElementById('chkAddress').value,
+        country: document.getElementById('chkCountry').value,
+        items: cart,
+        totalUSD: totalUSD
+      };
+
+      try {
+        const res = await fetch(`${API}/orders`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          cart = [];
+          localStorage.removeItem('cityToursCart');
+          updateCartUI();
+          closeCheckoutModal();
+          Swal.fire({ icon: 'success', title: 'Order Confirmed!', text: 'Your souvenir order has been received.' });
+        }
+      } catch (err) {
+        Swal.fire({ icon: 'error', title: 'Error', text: 'Backend is offline.' });
+      }
+    }
+
+    function populateTourSelect() {
+      const s = document.getElementById('bPkg');
+      s.innerHTML = '';
+      allPackages.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.title;
+        opt.dataset.price = p.priceUSD;
+        opt.innerText = `${p.title} ($${p.priceUSD})`;
+        s.appendChild(opt);
+      });
+      calculateTourTotal();
+    }
+
+    function calculateTourTotal() {
+      const s = document.getElementById('bPkg');
+      if (!s.selectedIndex) return;
+      const base = parseFloat(s.options[s.selectedIndex].dataset.price) || 200;
+      const g = parseInt(document.getElementById('bGuests').value) || 1;
+      const tot = base * g;
+      const conv = Math.round(tot * RATES[currentCurrency]);
+      document.getElementById('bTotal').innerText = `${SYMBOLS[currentCurrency]}${conv}`;
+    }
+
+    async function handleTourBooking(e) {
+      e.preventDefault();
+      const s = document.getElementById('bPkg');
+      const base = parseFloat(s.options[s.selectedIndex].dataset.price) || 200;
+      const g = parseInt(document.getElementById('bGuests').value) || 1;
+
+      const payload = {
+        fullName: document.getElementById('bName').value,
+        email: document.getElementById('bEmail').value,
+        package: s.value,
+        travelDate: document.getElementById('bDate').value,
+        guests: g,
+        totalPrice: base * g
+      };
+
+      const res = await fetch(`${API}/bookings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        Swal.fire({ icon: 'success', title: 'Tour Reserved!', text: 'Your booking has been saved.' });
+        e.target.reset();
+      }
+    }
+
+    function calculateCustomTrip() {
+      let destTotal = 0;
+      document.querySelectorAll('.custom-dest:checked').forEach(c => destTotal += Number(c.value));
+      const hotel = Number(document.getElementById('customHotel').value);
+      const vehicle = Number(document.getElementById('customVehicle').value);
+      const totalUSD = destTotal + hotel + vehicle;
+      const converted = Math.round(totalUSD * RATES[currentCurrency]);
+      document.getElementById('customEstimatedPrice').innerText = `${SYMBOLS[currentCurrency]}${converted}`;
+      return totalUSD;
+    }
+
+    function prefillCustomBooking() {
+      const customPrice = calculateCustomTrip();
+      const select = document.getElementById('bPkg');
+      let customOpt = Array.from(select.options).find(o => o.value === 'Custom Tailored Itinerary');
+      if (!customOpt) {
+        customOpt = document.createElement('option');
+        customOpt.value = 'Custom Tailored Itinerary';
+        select.appendChild(customOpt);
+      }
+      customOpt.dataset.price = customPrice;
+      customOpt.innerText = `Custom Tailored Itinerary ($${customPrice})`;
+      select.value = 'Custom Tailored Itinerary';
+      calculateTourTotal();
+      document.getElementById('booking').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function changeCurrency(c) {
+      currentCurrency = c;
+      applyFilters();
+      renderProducts();
+      calculateTourTotal();
+      calculateCustomTrip();
+      updateCartUI();
+    }
+
+    function toggleFaq(el) {
+      el.querySelector('p').classList.toggle('hidden');
+      el.querySelector('i').classList.toggle('rotate-180');
+    }
+
+    function initMap() {
+      const map = L.map('map').setView([7.8731, 80.7718], 7.5);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      [
+        { name: "Sigiriya UNESCO Fortress", coords: [7.9570, 80.7603] },
+        { name: "Kandy Sacred City", coords: [7.2906, 80.6337] },
+        { name: "Ella Nine Arch Bridge", coords: [6.8667, 81.0466] },
+        { name: "Galle Dutch Fort", coords: [6.0328, 80.2170] }
+      ].forEach(m => L.marker(m.coords).addTo(map).bindPopup(`<b>${m.name}</b>`));
+    }
+  </script>
+</body>
+</html>
